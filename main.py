@@ -17,10 +17,12 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
 )
-thread_count=10
+thread_count = 10
 semaphore = Semaphore(thread_count)
+
+
 def process_company(company_url):
-    file_name= './json_/'+company_url.split('/')[-1] + '.json'
+    file_name = './json_/' + company_url.split('/')[-1] + '.json'
     if isfile(file_name):
         logging.debug(f"File already exists: {file_name}, skipping processing.")
         return
@@ -29,27 +31,48 @@ def process_company(company_url):
     if not company_soup:
         logging.error(f"Failed to retrieve company page: {company_url}")
         return
-    data={
+    data = {
         'url': company_url,
-        'logo': company_soup.find('img', {'itemprop': 'logo'})['src'] if company_soup.find('img', {'itemprop': 'logo'}) else None,
-        'name': company_soup.find('meta',{'itemprop':'name'}).get('content', '').strip() if company_soup.find('meta',{'itemprop':'name'}) else None,
-        'streetAddress': company_soup.find('span', {'itemprop': 'streetAddress'}).text.strip() if company_soup.find('span', {'itemprop': 'streetAddress'}) else None,
-        'addressLocality': company_soup.find('span', {'itemprop': 'addressLocality'}).text.strip() if company_soup.find('span', {'itemprop': 'addressLocality'}) else None,
-        'addressRegion': company_soup.find('span', {'itemprop': 'addressRegion'}).text.strip() if company_soup.find('span', {'itemprop': 'addressRegion'}) else None,
-        'postalCode': company_soup.find('span', {'itemprop': 'postalCode'}).text.strip() if company_soup.find('span', {'itemprop': 'postalCode'}) else None,
-        'telephone': ', '.join([telephone.find('a')['href'].replace('tel:','') for telephone in company_soup.find_all('li', {'class': 'list-group-item gz-card-phone'})]),
-        'faxNumber': ', '.join([fax.find('a')['href'].replace('tel:','') for fax in company_soup.find_all('li', {'class': 'list-group-item gz-card-fax'})]) if company_soup.find_all('li', {'class': 'list-group-item gz-card-fax'}) else None,
-        'website': company_soup.find('li', {'class': 'list-group-item gz-card-website'}).find('a')['href'] if company_soup.find('li', {'class': 'list-group-item gz-card-website'}) else None,
-        'linkedin': company_soup.find('a', {'class': 'gz-social-linkedin'})['href'] if company_soup.find('a', {'class': 'gz-social-linkedin'}) else None,
-        'twitter': company_soup.find('a', {'class': 'gz-social-twitter'})['href'] if company_soup.find('a', {'class': 'gz-social-twitter'}) else None,
-        'youtube': company_soup.find('a', {'class': 'gz-social-youtube'})['href'] if company_soup.find('a', {'class': 'gz-social-youtube'}) else None,
-        'instagram': company_soup.find('a', {'class': 'gz-social-instagram'})['href'] if company_soup.find('a', {'class': 'gz-social-instagram'}) else None,
-        'facebook': company_soup.find('a', {'class': 'gz-social-facebook'})['href'] if company_soup.find('a', {'class': 'gz-social-facebook'}) else None,
+        'logo': company_soup.find('img', {'itemprop': 'logo'})['src'] if company_soup.find('img', {
+            'itemprop': 'logo'}) else None,
+        'name': company_soup.find('meta', {'itemprop': 'name'}).get('content', '').strip() if company_soup.find('meta',
+                                                                                                                {
+                                                                                                                    'itemprop': 'name'}) else None,
+        'streetAddress': company_soup.find('span', {'itemprop': 'streetAddress'}).text.strip() if company_soup.find(
+            'span', {'itemprop': 'streetAddress'}) else None,
+        'addressLocality': company_soup.find('span', {'itemprop': 'addressLocality'}).text.strip() if company_soup.find(
+            'span', {'itemprop': 'addressLocality'}) else None,
+        'addressRegion': company_soup.find('span', {'itemprop': 'addressRegion'}).text.strip() if company_soup.find(
+            'span', {'itemprop': 'addressRegion'}) else None,
+        'postalCode': company_soup.find('span', {'itemprop': 'postalCode'}).text.strip() if company_soup.find('span', {
+            'itemprop': 'postalCode'}) else None,
+        'telephone': ', '.join([telephone.find('a')['href'].replace('tel:', '') for telephone in
+                                company_soup.find_all('li', {'class': 'list-group-item gz-card-phone'})]),
+        'faxNumber': ', '.join([fax.find('a')['href'].replace('tel:', '') for fax in company_soup.find_all('li', {
+            'class': 'list-group-item gz-card-fax'})]) if company_soup.find_all('li', {
+            'class': 'list-group-item gz-card-fax'}) else None,
+        'website': company_soup.find('li', {'class': 'list-group-item gz-card-website'}).find('a')[
+            'href'] if company_soup.find('li', {'class': 'list-group-item gz-card-website'}) else None,
+        'linkedin': company_soup.find('a', {'class': 'gz-social-linkedin'})['href'] if company_soup.find('a', {
+            'class': 'gz-social-linkedin'}) else None,
+        'twitter': company_soup.find('a', {'class': 'gz-social-twitter'})['href'] if company_soup.find('a', {
+            'class': 'gz-social-twitter'}) else None,
+        'youtube': company_soup.find('a', {'class': 'gz-social-youtube'})['href'] if company_soup.find('a', {
+            'class': 'gz-social-youtube'}) else None,
+        'instagram': company_soup.find('a', {'class': 'gz-social-instagram'})['href'] if company_soup.find('a', {
+            'class': 'gz-social-instagram'}) else None,
+        'facebook': company_soup.find('a', {'class': 'gz-social-facebook'})['href'] if company_soup.find('a', {
+            'class': 'gz-social-facebook'}) else None,
         'cat': ", ".join([cat.text.strip() for cat in company_soup.find_all('span', {'class': 'gz-cat'})]),
-        'description': company_soup.find('div', {'itemprop': 'description'}).text.strip() if company_soup.find('div', {'itemprop': 'description'}) else None,
-        'repname': company_soup.find('div', {'class': 'gz-member-repname gz-member-pointer'}).text.strip() if company_soup.find('div', {'class': 'gz-member-repname gz-member-pointer'}) else None,
-        'reptitle': company_soup.find('div', {'class': 'gz-member-reptitle'}).text.strip() if company_soup.find('div', {'class': 'gz-member-reptitle'}) else None,
-        'repphone': company_soup.find('span', {'class': 'gz-rep-phone-num'}).text.strip() if company_soup.find('span', {'class': 'gz-rep-phone-num'}) else None,
+        'description': company_soup.find('div', {'itemprop': 'description'}).text.strip() if company_soup.find('div', {
+            'itemprop': 'description'}) else None,
+        'repname': company_soup.find('div', {
+            'class': 'gz-member-repname gz-member-pointer'}).text.strip() if company_soup.find('div', {
+            'class': 'gz-member-repname gz-member-pointer'}) else None,
+        'reptitle': company_soup.find('div', {'class': 'gz-member-reptitle'}).text.strip() if company_soup.find('div', {
+            'class': 'gz-member-reptitle'}) else None,
+        'repphone': company_soup.find('span', {'class': 'gz-rep-phone-num'}).text.strip() if company_soup.find('span', {
+            'class': 'gz-rep-phone-num'}) else None,
     }
     logging.info(json.dumps(data))
     with open(file_name, 'w', encoding='utf-8') as f:
@@ -61,7 +84,8 @@ def main():
     makedirs('json_', exist_ok=True)
     logging.info("Starting to process listings...")
     threads = []
-    alphabets = ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+    alphabets = ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+                 't', 'u', 'v', 'w', 'x', 'y', 'z']
     shuffle(alphabets)
     for alpha in alphabets:
         logging.info(f"Processing listings for letter: {alpha}")
@@ -73,12 +97,14 @@ def main():
             company_url = h5.find('a').get('href')
             if company_url:
                 # process_company(company_url)
-                thread  = Thread(target=process_company, args=(company_url,))
+                thread = Thread(target=process_company, args=(company_url,))
                 thread.start()
                 threads.append(thread)
         for thread in threads:
             thread.join()
         export_csv()
+
+
 def export_csv():
     files = glob.glob('./json_/*.json')
     logging.info(f"Found {len(files)} JSON files to export to CSV.")
@@ -103,7 +129,8 @@ def get_request(url):
         return requests.get(
             url=url,
             impersonate='chrome'
-            )
+        )
+
 
 def logo():
     print(rf"""
@@ -124,5 +151,7 @@ def logo():
 _______________________________________________________________________________________________________________
 """)
     time.sleep(1)
+
+
 if __name__ == '__main__':
     main()
