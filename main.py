@@ -33,7 +33,7 @@ def process_company(company_url):
         'logo': company_soup.find('img', {'itemprop': 'logo'})['src'] if company_soup.find('img', {'itemprop': 'logo'}) else None,
         'name': company_soup.find('meta',{'itemprop':'name'}).get('content', '').strip(),
         'streetAddress': company_soup.find('span', {'itemprop': 'streetAddress'}).text.strip() if company_soup.find('span', {'itemprop': 'streetAddress'}) else None,
-        'addressLocality': company_soup.find('span', {'itemprop': 'addressLocality'}).text.strip(),
+        'addressLocality': company_soup.find('span', {'itemprop': 'addressLocality'}).text.strip() if company_soup.find('span', {'itemprop': 'addressLocality'}) else None,
         'addressRegion': company_soup.find('span', {'itemprop': 'addressRegion'}).text.strip(),
         'postalCode': company_soup.find('span', {'itemprop': 'postalCode'}).text.strip() if company_soup.find('span', {'itemprop': 'postalCode'}) else None,
         'telephone': ', '.join([telephone.find('a')['href'].replace('tel:','') for telephone in company_soup.find_all('li', {'class': 'list-group-item gz-card-phone'})]),
