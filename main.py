@@ -3,6 +3,7 @@ import logging
 import time
 from os import makedirs
 from os.path import isfile
+from random import shuffle
 
 from bs4 import BeautifulSoup
 from curl_cffi import requests
@@ -21,7 +22,7 @@ semaphore = Semaphore(thread_count)
 def process_company(company_url):
     file_name= './json_/'+company_url.split('/')[-1] + '.json'
     if isfile(file_name):
-        logging.info(f"File already exists: {file_name}, skipping processing.")
+        logging.debug(f"File already exists: {file_name}, skipping processing.")
         return
     logging.info(f"Processing company: {company_url}")
     company_soup = get_soup(company_url)
@@ -31,10 +32,10 @@ def process_company(company_url):
     data={
         'url': company_url,
         'logo': company_soup.find('img', {'itemprop': 'logo'})['src'] if company_soup.find('img', {'itemprop': 'logo'}) else None,
-        'name': company_soup.find('meta',{'itemprop':'name'}).get('content', '').strip(),
+        'name': company_soup.find('meta',{'itemprop':'name'}).get('content', '').strip() if company_soup.find('meta',{'itemprop':'name'}) else None,
         'streetAddress': company_soup.find('span', {'itemprop': 'streetAddress'}).text.strip() if company_soup.find('span', {'itemprop': 'streetAddress'}) else None,
         'addressLocality': company_soup.find('span', {'itemprop': 'addressLocality'}).text.strip() if company_soup.find('span', {'itemprop': 'addressLocality'}) else None,
-        'addressRegion': company_soup.find('span', {'itemprop': 'addressRegion'}).text.strip(),
+        'addressRegion': company_soup.find('span', {'itemprop': 'addressRegion'}).text.strip() if company_soup.find('span', {'itemprop': 'addressRegion'}) else None,
         'postalCode': company_soup.find('span', {'itemprop': 'postalCode'}).text.strip() if company_soup.find('span', {'itemprop': 'postalCode'}) else None,
         'telephone': ', '.join([telephone.find('a')['href'].replace('tel:','') for telephone in company_soup.find_all('li', {'class': 'list-group-item gz-card-phone'})]),
         'faxNumber': ', '.join([fax.find('a')['href'].replace('tel:','') for fax in company_soup.find_all('li', {'class': 'list-group-item gz-card-fax'})]) if company_soup.find_all('li', {'class': 'list-group-item gz-card-fax'}) else None,
@@ -60,8 +61,9 @@ def main():
     makedirs('json_', exist_ok=True)
     logging.info("Starting to process listings...")
     threads = []
-    for alpha in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-                  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']:
+    alphabets = ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+    shuffle(alphabets)
+    for alpha in alphabets:
         logging.info(f"Processing listings for letter: {alpha}")
         listing_soup = get_soup(f'https://business.edmontonchamber.com/list/searchalpha/{alpha}')
         if not listing_soup:
