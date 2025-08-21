@@ -51,6 +51,7 @@ def process_company(company_url):
 
 
 def main():
+    logo()
     makedirs('json_', exist_ok=True)
     logging.info("Starting to process listings...")
     for alpha in ['0-9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -108,4 +109,3 @@ ________________________________________________________________________________
 """)
 if __name__ == '__main__':
     main()
-    # process_company('https://business.edmontonchamber.com/list/member/acs-express-inc-25814')
